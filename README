@@ -1,3 +1,48 @@
-This is a collection of useful macros and functions during C program development. 
+This is a collection of macros for zone-based control for debug messages.
 
-[More contents TBD]
+My work is mainly related to embedded devices and firmware, and therefore this suite of
+macros is targetted at console applications.
+
+PROBLEM STATEMENT:
+
+During software development, it is often desirable to control the amount of messages generated.
+
+For example, a particular project has 3 files: i2c.c, dma.c, and ethernet.c. 
+If we want to modify dma.c, there are 3 ways to control the amount of messages generated:
+
+The simplest solution: putting debug statements and removing them later. The disadvantage of this
+method is waste of resources. Chance is high that we may need the debug aids later and the process
+of adding/removing the statements is error-prone and inefficient. On the other hand it is usual not
+desirable to see so many debug messages during normal operation of the software. Therefore this
+solution is not practical.
+
+With DBG switch: By adding the #ifdef DEBUG preprocessor guards, the debug statements could be
+enabled and disabled at the flip of the switch. This is a vast improvement than the previous solution
+because we can decide when we want to debug statements. However this approach still has its downsides.
+We don't have a fine control on exactly which messages we want to see, and often the display would
+be garbled up by unwanted messages from other modules.
+
+MY SOLUTION:
+
+Zone-based control: Due to the constraint of the solution based on DBG switch, I figured it is necessary
+to have a fine-grained control on what messages will be shown. First of all I classify messages into different
+categories. For example, fatal (e.g. cannot allocate memory), important (e.g. ethernet interface is up), warning (e.g. configuration 
+not found), and zone specific (e.g. debug_zone_1 for all calculations on the SNR), etc. For the complete list, please refer to the 
+header file directly. Next, each of the print statement will be modified to add the corresponding category where each of them will
+belong. Finally, all of these print statement will be controlled on a per-file basis. 
+
+Consider the following code:
+
+int main()
+{
+   printf("Entering main\n");
+   do_board_setup();
+
+   printf("Before dma setup\n");
+   do_dma_setup(); 
+   printf("After dma setup\n");
+
+   return 0;
+}
+
+[To be continued, massive rewrite pending]
