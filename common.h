@@ -89,7 +89,7 @@ do{\
 	}\
 	else\
 	{\
-    		VPRINT(V_ERROR, "****ERROR: Didn't return XST_SUCCESS: %s\n\r", #F);\
+    		VPRINT(V_ERROR, "****ERROR: Didn't return OK: %s\n\r", #F);\
 		return;\
 	}\
 }while(0)
