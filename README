@@ -85,10 +85,10 @@ to have a fine-grained control on what messages will be shown. To start off, we 
 of the debug messages on a per-file basis and we declare a static unsigned integer for this purpose. 
 
 Next, we classify messages into different categories, each represented by a bit of the unsigned integer. For example, 
-fatal (e.g. cannot allocate memory), important (e.g. ethernet interface is up), warning (e.g.  configuration not found), 
-and zone specific (e.g. debug_zone_1 for all calculations on the SNR), etc. For the complete list, please refer 
-to the header file directly. Therefore, we have a very fine-grained control of the set of messages we wish to be printed
-simply by flipping the corresponding bits. 
+fatal (e.g. cannot allocate memory), important (e.g. ethernet interface is up), warning (e.g.  configuration not 
+found), and zone specific (e.g. debug_zone_1 for all calculations on the SNR), etc. For the complete list, please 
+refer to the header file directly. Therefore, we have a very fine-grained control of the set of messages we wish 
+to be printed simply by flipping the corresponding bits. 
 
 
 //
