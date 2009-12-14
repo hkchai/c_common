@@ -1,48 +1,152 @@
-This is a collection of macros for zone-based control for debug messages.
-
-My work is mainly related to embedded devices and firmware, and therefore this suite of
-macros is targetted at console applications.
+This is a collection of macros for zone-based printing of debug messages, targetting console applications.
 
 PROBLEM STATEMENT:
 
 During software development, it is often desirable to control the amount of messages generated.
 
-For example, a particular project has 3 files: i2c.c, dma.c, and ethernet.c. 
-If we want to modify dma.c, there are 3 ways to control the amount of messages generated:
-
-The simplest solution: putting debug statements and removing them later. The disadvantage of this
+The put-and-forget solution: putting in debug statements and if necessary, removing them later. As shown
+in the following 'put_and_forget' function. The disadvantage of this
 method is waste of resources. Chance is high that we may need the debug aids later and the process
 of adding/removing the statements is error-prone and inefficient. On the other hand it is usual not
 desirable to see so many debug messages during normal operation of the software. Therefore this
 solution is not practical.
 
-With DBG switch: By adding the #ifdef DEBUG preprocessor guards, the debug statements could be
-enabled and disabled at the flip of the switch. This is a vast improvement than the previous solution
-because we can decide when we want to debug statements. However this approach still has its downsides.
-We don't have a fine control on exactly which messages we want to see, and often the display would
-be garbled up by unwanted messages from other modules.
+#define MEM_SIZE  (1024)
 
-MY SOLUTION:
-
-Zone-based control: Due to the constraint of the solution based on DBG switch, I figured it is necessary
-to have a fine-grained control on what messages will be shown. First of all I classify messages into different
-categories. For example, fatal (e.g. cannot allocate memory), important (e.g. ethernet interface is up), warning (e.g. configuration 
-not found), and zone specific (e.g. debug_zone_1 for all calculations on the SNR), etc. For the complete list, please refer to the 
-header file directly. Next, each of the print statement will be modified to add the corresponding category where each of them will
-belong. Finally, all of these print statement will be controlled on a per-file basis. 
-
-Consider the following code:
-
-int main()
+int put_and_forget()
 {
-   printf("Entering main\n");
+   printf("Entering %s\n", __func__);
    do_board_setup();
 
    printf("Before dma setup\n");
    do_dma_setup(); 
    printf("After dma setup\n");
 
-   return 0;
-}
+   memBlock = (char *) malloc(MEM_SIZE);
 
-[To be continued, massive rewrite pending]
+   if(memBlock == NULL)
+   {
+     printf("Cannot allocate memory!\n");
+     return -1;
+   }
+
+   return 0;
+
+}/* put_and_forget */
+
+With DBG switch: By adding the #ifdef DBG preprocessor guards, the debug statements could be
+enabled and disabled at the flip of the switch. This is a vast improvement over the previous solution
+because we can decide when we want to debug statements. However this approach still has its downsides.
+First, We still don't have a fine control on exactly which messages we want to see, and the display 
+tends to be garbled up by unwanted messages from other modules. Besides that, the function will be
+cluttered with a lot of #if...#endif's which make the code very messy. Obviously a better approach 
+is needed.
+
+#define DBG // Comment out when not in use
+#define MEM_SIZE  (1024)
+
+int with_debug_statement()
+{
+   char *memBlock = NULL;
+
+#ifdef DBG
+   printf("Entering %s\n", __func__);
+#endif
+   do_board_setup();
+
+#ifdef DBG
+   printf("Before dma setup\n");
+#endif
+   do_dma_setup(); 
+#ifdef DBG
+   printf("After dma setup\n");
+#endif
+
+   memBlock = (char *) malloc(MEM_SIZE);
+
+   if(memBlock == NULL)
+   {
+
+#ifdef DBG
+     printf("Cannot allocate memory!\n");
+#endif
+     return -1;
+     
+   }
+
+   return 0;
+
+}/* with_debug_statement */
+
+MY SOLUTION:
+
+Zone-based control: Due to the constraint of the solution based on DBG switch, we figured it is necessary
+to have a fine-grained control on what messages will be shown. To start off, we will need a control of the verbosity 
+of the debug messages on a per-file basis and we declare a static unsigned integer for this purpose. 
+
+Next, we classify messages into different categories, each represented by a bit of the unsigned integer. For example, 
+fatal (e.g. cannot allocate memory), important (e.g. ethernet interface is up), warning (e.g.  configuration not found), 
+and zone specific (e.g. debug_zone_1 for all calculations on the SNR), etc. For the complete list, please refer 
+to the header file directly. Therefore, we have a very fine-grained control of the set of messages we wish to be printed
+simply by flipping the corresponding bits. 
+
+
+//
+// For reading convenience I have reproduced the macro definitions below. In actual
+// use, the user only needs to include "common.h" 
+//
+#define VPRINT(level, F, args...)\
+	do{\
+		if(level & global_verbose_level)\
+		{\
+			printf("\n\r%s: " F, __func__, ##args);\
+		}\
+	}while(0)
+
+#define V_MAX (1<<31)
+#define V_ENTER_EXIT (1<<30)
+// 
+// Unused bits for future development
+//  
+#define V_DEBUG_3 (1<<14)
+#define V_DEBUG_2 (1<<13)
+#define V_DEBUG_1 (1<<12)
+#define V_DEBUG (1<<11)
+#define V_INFO (1<<10)
+#define V_WARNING (1<<8)
+#define V_ERROR (1<<6)
+#define V_IMPORTANT (1<<5)
+#define V_FATAL (1<<4)
+#define V_CRITICAL (1<<2)
+#define V_SILENT (1<<1)
+#define V_MIN (0)
+
+//
+// We declare this variable static so that its scope is only limited to this file
+// V_IMPORTANT_S is a shorthand for (V_IMPORTANT | V_FATAL | V_CRITICAL)
+//
+static unsigned int global_verbose_level = V_IMPORTANT_S;  
+
+#define MEM_SIZE  (1024)
+
+int zone_based()
+{
+   VPRINT(V_INFO, "Entering %s\n", __func__);
+   do_board_setup();
+
+   VPRINT(V_DEBUG_1, "Before dma setup\n");
+   do_dma_setup(); 
+   VPRINT(V_DEBUG_1, "After dma setup\n");
+
+   memBlock = (char *) malloc(MEM_SIZE);
+
+   if(memBlock != NULL); 
+   {
+      /* V_FATAL will still show up because it is included by V_IMPORTANT_S */
+      VPRINT(V_FATAL, "Cannot allocate memory\n"); 
+      return -1;
+   }
+
+   return 0;
+
+}/* zone_based */

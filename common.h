@@ -62,7 +62,7 @@ typedef long long int64_t;
 do{\
 	if(level & global_verbose_level)\
 	{\
-		xil_printf("\n\r%s: " F, __func__, ##args);\
+		printf("\n\r%s: " F, __func__, ##args);\
 	}\
 }while(0)
 
@@ -77,13 +77,13 @@ do{\
 do{\
 	if(level & global_verbose_level)\
 	{\
-		xil_printf(F, ##args);\
+		printf(F, ##args);\
 	}\
 }while(0)
 
 #define VCHECK_VOID(F) \
 do{\
-	if(F == XST_SUCCESS)\
+	if(F == OK)\
 	{\
     		VPRINT(V_DEBUG, "%s is ok\n\r", #F);\
 	}\
@@ -103,7 +103,7 @@ do{\
 	else\
 	{\
     		VPRINT(V_ERROR, "****ERROR: This statement has failed assertion: %s\n\r", #F);\
-		return XST_FAILURE;\
+		return ERROR;\
 	}\
 }while(0)
 
@@ -135,14 +135,14 @@ do{\
 
 #define VCHECK(F) \
   do{\
-	if(F == XST_SUCCESS)\
+	if(F == OK)\
 	{\
     		VPRINT(V_DEBUG, "%s is ok\n\r", #F);\
 	}\
 	else\
 	{\
-    		VPRINT(V_ERROR, "****ERROR: Didn't return XST_SUCCESS: %s\n\r", #F);\
-		return XST_FAILURE;\
+    		VPRINT(V_ERROR, "****ERROR: Didn't return OK: %s\n\r", #F);\
+		return ERROR;\
 	}\
   }while(0)
 
