@@ -81,15 +81,16 @@ int with_debug_statement()
 MY SOLUTION:
 
 Zone-based control: Due to the constraint of the solution based on DBG switch, we figured it is necessary
-to have a fine-grained control on what messages will be shown. To start off, we will need a control of the verbosity 
-of the debug messages on a per-file basis and we declare a static unsigned integer for this purpose. 
+to have a fine-grained control on what messages will be shown. To start off, we declare a static unsigned integer 
+as a variable to control the verbosity of the debug messages on a per-file basis. 
 
-Next, we classify messages into different categories, each represented by a bit of the unsigned integer. For example, 
-fatal (e.g. cannot allocate memory), important (e.g. ethernet interface is up), warning (e.g.  configuration not 
-found), and zone specific (e.g. debug_zone_1 for all calculations on the SNR), etc. For the complete list, please 
-refer to the header file directly. Therefore, we have a very fine-grained control of the set of messages we wish 
-to be printed simply by flipping the corresponding bits. 
+Next, we classify messages into different categories, each represented by a bit of the unsigned integer. Examples
+of the categories include: fatal (e.g. cannot allocate memory), important (e.g. ethernet interface is up), 
+warning (e.g. configuration not found), and user-defined zones (e.g. debug_zone_1 for all calculations on the SNR), etc. 
+For the complete list, please refer to the header file directly. In other words, we have a very fine-grained control 
+of the set of messages we want to print simply by flipping the corresponding bits. 
 
+The following example may help to clarify things.
 
 //
 // For reading convenience I have reproduced the macro definitions below. In actual
